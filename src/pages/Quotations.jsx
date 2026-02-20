@@ -67,7 +67,6 @@ export default function Quotations() {
 
   // ================= UPDATE FIELD =================
   const updateField = (index, field, value) => {
-
     const updated = [...items];
     updated[index][field] = value;
 
@@ -192,10 +191,192 @@ export default function Quotations() {
     }
   };
 
-  // ================= UI (UNCHANGED) =================
+  // ================= UI =================
   return (
     <div className="flex bg-gray-100 min-h-screen">
-      {/* UI unchanged from your version */}
+
+      {/* LEFT SIDE */}
+      <div className="w-3/4 p-8">
+
+        <h1 className="text-3xl font-bold mb-6">
+          Create Quotation
+        </h1>
+
+        {/* CLIENT + MARGIN */}
+        <div className="bg-white p-6 rounded-xl shadow mb-6 grid grid-cols-2 gap-6">
+
+          <div>
+            <label className="block mb-1 font-semibold">Client</label>
+            <select
+              value={selectedClient}
+              onChange={(e) => setSelectedClient(e.target.value)}
+              className="border p-2 rounded w-full"
+            >
+              <option value="">Select Client</option>
+              {clients.map(c => (
+                <option key={c.id} value={c.id}>
+                  {c.company_name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block mb-1 font-semibold">Global Margin %</label>
+            <input
+              type="number"
+              value={margin}
+              min="0"
+              className="border p-2 rounded w-full"
+              onChange={(e) => setMargin(Number(e.target.value))}
+            />
+          </div>
+
+        </div>
+
+        {/* ITEMS TABLE */}
+        <div className="bg-white p-6 rounded-xl shadow">
+
+          {items.map((item, index) => {
+
+            const row = calculateRow(item);
+
+            return (
+              <div key={index} className="grid grid-cols-10 gap-2 mb-2 text-sm">
+
+                <select
+                  value={item.city_id}
+                  onChange={(e) => updateField(index, "city_id", e.target.value)}
+                  className="border p-1 rounded"
+                >
+                  <option value="">City</option>
+                  {cities.map(c => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+
+                <select
+                  value={item.category}
+                  onChange={(e) => updateField(index, "category", e.target.value)}
+                  className="border p-1 rounded"
+                >
+                  <option value="">Type</option>
+                  <option value="HOTEL">Hotel</option>
+                  <option value="TOUR">Tour</option>
+                  <option value="TRANSFER">Transfer</option>
+                  <option value="VISA">Visa</option>
+                  <option value="TICKET">Ticket</option>
+                </select>
+
+                <select
+                  value={item.service_id}
+                  onChange={(e) => updateField(index, "service_id", e.target.value)}
+                  className="border p-1 rounded"
+                >
+                  <option value="">Service</option>
+                  {filteredServices(item.city_id, item.category).map(s => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
+                </select>
+
+                <select
+                  value={item.vendor_id}
+                  onChange={(e) => updateField(index, "vendor_id", e.target.value)}
+                  className="border p-1 rounded"
+                >
+                  <option value="">Vendor</option>
+                  {vendors.map(v => (
+                    <option key={v.id} value={v.id}>{v.name}</option>
+                  ))}
+                </select>
+
+                <input
+                  type="number"
+                  placeholder="Cost"
+                  value={item.cost_price}
+                  onChange={(e) => updateField(index, "cost_price", e.target.value)}
+                  className="border p-1 rounded"
+                />
+
+                <input
+                  type="number"
+                  placeholder="%"
+                  value={item.manual_margin_percentage}
+                  onChange={(e) => updateField(index, "manual_margin_percentage", e.target.value)}
+                  className="border p-1 rounded"
+                />
+
+                <input
+                  type="date"
+                  value={item.start_date}
+                  onChange={(e) => updateField(index, "start_date", e.target.value)}
+                  className="border p-1 rounded"
+                />
+
+                <input
+                  type="date"
+                  value={item.end_date}
+                  onChange={(e) => updateField(index, "end_date", e.target.value)}
+                  className="border p-1 rounded"
+                />
+
+                <div className="p-1 font-semibold text-green-600">
+                  {row.totalSell.toFixed(0)}
+                </div>
+
+                <button
+                  onClick={() => removeRow(index)}
+                  className="bg-red-500 text-white rounded px-2"
+                >
+                  X
+                </button>
+
+              </div>
+            );
+          })}
+
+          <button
+            onClick={addNewRow}
+            className="mt-4 bg-blue-600 text-white px-4 py-2 rounded"
+          >
+            + Add Row
+          </button>
+
+        </div>
+
+      </div>
+
+      {/* RIGHT SIDE SUMMARY */}
+      <div className="w-1/4 p-6 bg-white shadow-lg sticky top-0 h-screen">
+
+        <h2 className="text-xl font-bold mb-6">Summary</h2>
+
+        <div className="space-y-4 text-sm">
+          <div className="flex justify-between">
+            <span>Total Cost</span>
+            <span>{totals.cost.toFixed(0)}</span>
+          </div>
+
+          <div className="flex justify-between">
+            <span>Total Sell</span>
+            <span>{totals.sell.toFixed(0)}</span>
+          </div>
+
+          <div className="flex justify-between font-semibold text-green-600">
+            <span>Total Profit</span>
+            <span>{totals.profit.toFixed(0)}</span>
+          </div>
+        </div>
+
+        <button
+          onClick={saveQuotation}
+          className="mt-8 w-full bg-green-600 text-white py-3 rounded-lg font-semibold"
+        >
+          Save Quotation
+        </button>
+
+      </div>
+
     </div>
   );
 }
