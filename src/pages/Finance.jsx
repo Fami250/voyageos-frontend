@@ -14,10 +14,9 @@ import {
   Pie,
   Cell
 } from "recharts";
+import API from "../api/api";
 
 export default function Finance() {
-
-  const API = "http://127.0.0.1:8000";
 
   const [summary, setSummary] = useState(null);
   const [invoices, setInvoices] = useState([]);
@@ -29,14 +28,17 @@ export default function Finance() {
       setLoading(true);
 
       const summaryRes = await fetch(`${API}/accounts/summary`);
+      if (!summaryRes.ok) throw new Error("Summary fetch failed");
       const summaryData = await summaryRes.json();
       setSummary(summaryData);
 
       const invoiceRes = await fetch(`${API}/invoices/`);
+      if (!invoiceRes.ok) throw new Error("Invoice fetch failed");
       const invoiceData = await invoiceRes.json();
       setInvoices(invoiceData);
 
       const clientRes = await fetch(`${API}/clients/`);
+      if (!clientRes.ok) throw new Error("Client fetch failed");
       const clientData = await clientRes.json();
       setClients(clientData);
 
@@ -114,7 +116,6 @@ export default function Finance() {
   return (
     <div className="min-h-screen bg-gray-50 p-10 space-y-10">
 
-      {/* HEADER */}
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-4xl font-bold">Finance Overview</h1>
@@ -131,7 +132,6 @@ export default function Finance() {
         </button>
       </div>
 
-      {/* KPI CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
 
         <div className="bg-white p-6 rounded-2xl shadow-sm border">
@@ -164,7 +164,6 @@ export default function Finance() {
 
       </div>
 
-      {/* CHARTS */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
 
         <div className="bg-white p-6 rounded-2xl shadow-sm border">
@@ -207,7 +206,6 @@ export default function Finance() {
 
       </div>
 
-      {/* PAYMENT DISTRIBUTION */}
       <div className="bg-white p-6 rounded-2xl shadow-sm border">
         <h3 className="text-lg font-semibold mb-6">
           Payment Distribution
@@ -230,7 +228,6 @@ export default function Finance() {
         </ResponsiveContainer>
       </div>
 
-      {/* CLIENT RECEIVABLE TABLE */}
       <div className="bg-white p-6 rounded-2xl shadow-sm border">
         <h3 className="text-lg font-semibold mb-6">
           Client-wise Receivables

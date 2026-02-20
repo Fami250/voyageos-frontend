@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
+import API from "../api/api";
 
 export default function Vendors() {
-
-  const API = "http://127.0.0.1:8000";
 
   const [vendors, setVendors] = useState([]);
   const [countries, setCountries] = useState([]);
@@ -83,12 +82,17 @@ export default function Vendors() {
         fetch(`${API}/services/`)
       ]);
 
+      if (!vRes.ok || !cRes.ok || !cityRes.ok || !sRes.ok) {
+        throw new Error("Backend error");
+      }
+
       setVendors(await vRes.json());
       setCountries(await cRes.json());
       setCities(await cityRes.json());
       setServices(await sRes.json());
 
     } catch (error) {
+      console.error("Load Vendors Error:", error);
       alert("Backend connection error");
     } finally {
       setLoading(false);
@@ -160,14 +164,14 @@ export default function Vendors() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name: serviceForm.name.trim(),
-        category: serviceForm.category.trim().toUpperCase(),   // 🔥 ENUM SAFE
+        category: serviceForm.category.trim().toUpperCase(),
         city_id: Number(serviceForm.city_id)
       })
     });
 
     if (!res.ok) {
       const error = await res.json();
-      return alert(error.detail || JSON.stringify(error));   // 🔥 Real error show
+      return alert(error.detail || JSON.stringify(error));
     }
 
     setServiceForm(emptyServiceForm);

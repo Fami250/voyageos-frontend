@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
+import API from "../api/api";
 
 export default function Services() {
-
-  const API = "http://127.0.0.1:8000";
 
   // ================= STATES =================
   const [cities, setCities] = useState([]);
@@ -25,8 +24,9 @@ export default function Services() {
   const fetchCities = async () => {
     try {
       const res = await fetch(`${API}/cities/`);
+      if (!res.ok) throw new Error("Failed to fetch cities");
       const data = await res.json();
-      setCities(data);
+      setCities(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("Error fetching cities:", err);
     }
@@ -36,7 +36,7 @@ export default function Services() {
     fetchCities();
   }, []);
 
-  // ================= LOAD CITY SERVICES (CITY NAME BASED) =================
+  // ================= LOAD CITY SERVICES =================
   const fetchCityServices = async () => {
 
     if (!selectedCity) {
@@ -50,8 +50,11 @@ export default function Services() {
       const res = await fetch(
         `${API}/services/?city=${selectedCity}`
       );
+
+      if (!res.ok) throw new Error("Failed to load services");
+
       const data = await res.json();
-      setCityServices(data);
+      setCityServices(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("Error loading city services:", err);
     }
@@ -106,7 +109,7 @@ export default function Services() {
       method: "DELETE"
     });
 
-    fetchCityServices(); // refresh selected city list
+    fetchCityServices();
   };
 
   // ================= EXCEL UPLOAD =================
@@ -115,8 +118,8 @@ export default function Services() {
     const file = e.target.files[0];
     if (!file) return;
 
-    const formData = new FormData();
-    formData.append("file", file);
+    const uploadData = new FormData();
+    uploadData.append("file", file);
 
     setExcelLoading(true);
 
@@ -125,7 +128,7 @@ export default function Services() {
         `${API}/services/upload-excel/`,
         {
           method: "POST",
-          body: formData
+          body: uploadData
         }
       );
 
@@ -155,7 +158,6 @@ Rates Updated: ${data.rates_updated}`
   return (
     <div>
 
-      {/* ================= HEADER ================= */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Services</h1>
 
@@ -181,7 +183,6 @@ Rates Updated: ${data.rates_updated}`
         </div>
       </div>
 
-      {/* ================= ADD SERVICE FORM ================= */}
       {showForm && (
         <form
           onSubmit={handleSubmit}
@@ -237,13 +238,10 @@ Rates Updated: ${data.rates_updated}`
         </form>
       )}
 
-      {/* ================= CITY FILTER SECTION ================= */}
       <div className="bg-white p-6 rounded shadow mb-6">
-
         <h2 className="text-xl font-semibold mb-4">View City Services</h2>
 
         <div className="flex gap-4">
-
           <select
             value={selectedCity}
             onChange={(e) => setSelectedCity(e.target.value)}
@@ -263,11 +261,9 @@ Rates Updated: ${data.rates_updated}`
           >
             Load Services
           </button>
-
         </div>
       </div>
 
-      {/* ================= CITY SERVICES TABLE ================= */}
       {loadingRates ? (
         <p>Loading Services...</p>
       ) : cityServices.length > 0 && (

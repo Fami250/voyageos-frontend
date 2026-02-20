@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
+import API from "../api/api";
 
 export default function Invoices() {
-
-  const API = "http://127.0.0.1:8000";
 
   const [invoices, setInvoices] = useState([]);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
@@ -164,7 +163,6 @@ export default function Invoices() {
 
                 <td className="p-2 border space-x-2">
 
-                  {/* PRINT BUTTON */}
                   <a
                     href={`${API}/invoices/${inv.id}/pdf`}
                     target="_blank"
@@ -174,7 +172,6 @@ export default function Invoices() {
                     Print
                   </a>
 
-                  {/* CANCEL BUTTON */}
                   {inv.payment_status !== "PAID" &&
                    inv.payment_status !== "CANCELLED" && (
                     <button
@@ -195,7 +192,6 @@ export default function Invoices() {
 
       </div>
 
-      {/* ================= SELECTED INVOICE ================= */}
       {selectedInvoice && (
         <div className="bg-white p-6 rounded-xl shadow">
 
@@ -210,7 +206,6 @@ export default function Invoices() {
             <div><b>Status:</b> {selectedInvoice.payment_status}</div>
           </div>
 
-          {/* ================= PAYMENT FORM ================= */}
           {selectedInvoice.due_amount > 0 &&
            selectedInvoice.payment_status !== "CANCELLED" && (
 
@@ -259,7 +254,6 @@ export default function Invoices() {
             </div>
           )}
 
-          {/* ================= PAYMENT HISTORY ================= */}
           {payments.length > 0 && (
 
             <div className="mt-6">

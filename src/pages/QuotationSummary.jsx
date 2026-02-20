@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import API from "../api/api";
 
 function QuotationSummary() {
 
@@ -24,7 +25,7 @@ function QuotationSummary() {
 
     try {
       const response = await fetch(
-        `http://127.0.0.1:8000/quotations/filter/by-date?start_date=${startDate}&end_date=${endDate}`
+        `${API}/quotations/filter/by-date?start_date=${startDate}&end_date=${endDate}`
       );
 
       if (!response.ok) throw new Error("Failed to fetch quotations");
@@ -51,7 +52,7 @@ function QuotationSummary() {
 
     try {
       const response = await fetch(
-        `http://127.0.0.1:8000/quotations/${id}`,
+        `${API}/quotations/${id}`,
         { method: "DELETE" }
       );
 
@@ -68,7 +69,6 @@ function QuotationSummary() {
   return (
     <div style={{ padding: "40px", maxWidth: "1100px" }}>
 
-      {/* ================= HEADER ================= */}
       <h1
         style={{
           fontSize: "34px",
@@ -79,7 +79,6 @@ function QuotationSummary() {
         Quotation Summary
       </h1>
 
-      {/* ================= FILTER BOX ================= */}
       <div
         style={{
           backgroundColor: "#ffffff",
@@ -140,14 +139,12 @@ function QuotationSummary() {
 
       </div>
 
-      {/* ================= STATUS ================= */}
       {loading && <p style={{ fontSize: "16px" }}>Loading quotations...</p>}
       {error && <p style={{ color: "red", fontSize: "16px" }}>{error}</p>}
       {!loading && results.length === 0 && !error && (
         <p style={{ fontSize: "16px" }}>No quotations found</p>
       )}
 
-      {/* ================= TABLE ================= */}
       {Array.isArray(results) && results.length > 0 && (
         <table
           border="1"

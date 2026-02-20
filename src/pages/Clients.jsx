@@ -1,5 +1,11 @@
 import { useEffect, useState } from "react";
 
+// =========================
+// API BASE URL
+// =========================
+const API =
+  import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+
 export default function Clients() {
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -21,7 +27,8 @@ export default function Clients() {
   // =========================
   const fetchClients = async () => {
     try {
-      const res = await fetch("http://127.0.0.1:8000/clients/");
+      const res = await fetch(`${API}/clients/`);
+      if (!res.ok) throw new Error("Failed to fetch clients");
       const data = await res.json();
       setClients(data);
     } catch (error) {
@@ -53,15 +60,13 @@ export default function Clients() {
 
     try {
       if (editId) {
-        // UPDATE
-        await fetch(`http://127.0.0.1:8000/clients/${editId}`, {
+        await fetch(`${API}/clients/${editId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(formData),
         });
       } else {
-        // CREATE
-        await fetch("http://127.0.0.1:8000/clients/", {
+        await fetch(`${API}/clients/`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(formData),
@@ -82,7 +87,7 @@ export default function Clients() {
     if (!window.confirm("Delete this client?")) return;
 
     try {
-      await fetch(`http://127.0.0.1:8000/clients/${id}`, {
+      await fetch(`${API}/clients/${id}`, {
         method: "DELETE",
       });
       fetchClients();
@@ -124,7 +129,6 @@ export default function Clients() {
         </button>
       </div>
 
-      {/* FORM */}
       {showForm && (
         <form
           onSubmit={handleSubmit}
@@ -177,7 +181,6 @@ export default function Clients() {
         </form>
       )}
 
-      {/* TABLE */}
       {loading ? (
         <p>Loading...</p>
       ) : (

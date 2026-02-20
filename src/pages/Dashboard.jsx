@@ -11,11 +11,10 @@ import {
   BarChart,
   Bar,
 } from "recharts";
+import API from "../api/api";
 
 export default function Dashboard() {
   const navigate = useNavigate();
-
-  const API = import.meta.env.VITE_API || "http://localhost:8000";
 
   const [data, setData] = useState(null);
   const [monthlyData, setMonthlyData] = useState([]);
@@ -38,6 +37,7 @@ export default function Dashboard() {
         setLoading(false);
       });
 
+    // Static demo monthly chart (can later connect to backend)
     setMonthlyData([
       { month: "Jan", revenue: 1200000, profit: 250000 },
       { month: "Feb", revenue: 1500000, profit: 320000 },

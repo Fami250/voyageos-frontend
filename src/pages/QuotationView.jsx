@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import API from "../api/api";
 
 export default function QuotationView() {
 
   const { id } = useParams();
-  const API = "http://127.0.0.1:8000";
 
   const [quotation, setQuotation] = useState(null);
   const [invoice, setInvoice] = useState(null);

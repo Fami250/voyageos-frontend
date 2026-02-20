@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
+import API from "../api/api";
 
 export default function Cities() {
-
-  const API = "https://voyageos.onrender.com";
 
   const [cities, setCities] = useState([]);
   const [countries, setCountries] = useState([]);
@@ -21,6 +20,10 @@ export default function Cities() {
       const cityRes = await fetch(`${API}/cities/`);
       const countryRes = await fetch(`${API}/countries/`);
 
+      if (!cityRes.ok || !countryRes.ok) {
+        throw new Error("Failed to load data");
+      }
+
       const cityData = await cityRes.json();
       const countryData = await countryRes.json();
 
@@ -28,7 +31,7 @@ export default function Cities() {
       setCountries(Array.isArray(countryData) ? countryData : []);
 
     } catch (err) {
-      console.error(err);
+      console.error("Load Cities Error:", err);
       alert("Error loading cities");
     } finally {
       setLoading(false);
@@ -55,10 +58,10 @@ export default function Cities() {
 
       setName("");
       setCountryId("");
-      loadData();
+      await loadData();
 
     } catch (err) {
-      console.error(err);
+      console.error("Create City Error:", err);
       alert("Error creating city");
     }
   };
@@ -94,7 +97,7 @@ export default function Cities() {
 
         <button
           onClick={createCity}
-          className="bg-blue-600 text-white px-6 rounded-lg"
+          className="bg-blue-600 text-white px-6 rounded-lg hover:bg-blue-700"
         >
           Add City
         </button>

@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
+import API from "../api/api";
 
 export default function Countries() {
-
-  const API = "https://voyageos.onrender.com";
-
 
   const [countries, setCountries] = useState([]);
   const [name, setName] = useState("");
@@ -17,6 +15,7 @@ export default function Countries() {
   const loadCountries = async () => {
     try {
       setLoading(true);
+
       const res = await fetch(`${API}/countries/`);
 
       if (!res.ok) {
