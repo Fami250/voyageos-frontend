@@ -48,7 +48,7 @@ export default function Vendors() {
   useEffect(() => {
     if (vendorForm.country_id) {
       const filtered = cities.filter(
-        city => city.country_id === Number(vendorForm.country_id)
+        (city) => city.country_id === Number(vendorForm.country_id)
       );
       setFilteredCities(filtered);
     } else {
@@ -59,7 +59,7 @@ export default function Vendors() {
   useEffect(() => {
     if (serviceForm.country_id) {
       const filtered = cities.filter(
-        city => city.country_id === Number(serviceForm.country_id)
+        (city) => city.country_id === Number(serviceForm.country_id)
       );
       setServiceFilteredCities(filtered);
     } else {
@@ -78,105 +78,66 @@ export default function Vendors() {
         authFetch("/services/")
       ]);
 
-      const vendorsData = await vRes.json();
-      const countriesData = await cRes.json();
-      const citiesData = await cityRes.json();
-      const servicesData = await sRes.json();
-
-      setVendors(Array.isArray(vendorsData) ? vendorsData : []);
-      setCountries(Array.isArray(countriesData) ? countriesData : []);
-      setCities(Array.isArray(citiesData) ? citiesData : []);
-      setServices(Array.isArray(servicesData) ? servicesData : []);
+      setVendors(await vRes.json());
+      setCountries(await cRes.json());
+      setCities(await cityRes.json());
+      setServices(await sRes.json());
 
     } catch (error) {
-      console.error("Load Vendors Error:", error);
-      alert("Failed to load vendors data");
+      alert("Backend connection error");
     } finally {
       setLoading(false);
     }
   };
 
-  // ================= VENDOR ACTIONS =================
-
-  const handleVendorChange = (field, value) => {
-    setVendorForm(prev => ({ ...prev, [field]: value }));
-    if (field === "country_id") {
-      setVendorForm(prev => ({ ...prev, city_id: "" }));
-    }
-  };
+  // ================= SAVE VENDOR =================
 
   const saveVendor = async () => {
-
     if (!vendorForm.name || !vendorForm.country_id || !vendorForm.city_id) {
       return alert("Name, Country and City required");
     }
 
-    try {
-      const res = await authFetch("/vendors/", {
-        method: "POST",
-        body: JSON.stringify({
-          ...vendorForm,
-          country_id: Number(vendorForm.country_id),
-          city_id: Number(vendorForm.city_id)
-        })
-      });
+    const res = await authFetch("/vendors/", {
+      method: "POST",
+      body: JSON.stringify({
+        ...vendorForm,
+        country_id: Number(vendorForm.country_id),
+        city_id: Number(vendorForm.city_id)
+      })
+    });
 
-      if (!res.ok) throw new Error("Vendor creation failed");
-
-      setVendorForm(emptyVendorForm);
-      loadData();
-
-    } catch (error) {
-      console.error("Save Vendor Error:", error);
-      alert("Error creating vendor");
+    if (!res.ok) {
+      const err = await res.json();
+      return alert(err.detail || "Error saving vendor");
     }
+
+    setVendorForm(emptyVendorForm);
+    loadData();
   };
 
-  const handleDeleteVendor = async (id) => {
-    if (!window.confirm("Delete this vendor?")) return;
-
-    try {
-      await authFetch(`/vendors/${id}`, { method: "DELETE" });
-      loadData();
-    } catch (error) {
-      console.error("Delete Vendor Error:", error);
-    }
-  };
-
-  // ================= SERVICE ACTIONS =================
-
-  const handleServiceChange = (field, value) => {
-    setServiceForm(prev => ({ ...prev, [field]: value }));
-    if (field === "country_id") {
-      setServiceForm(prev => ({ ...prev, city_id: "" }));
-    }
-  };
+  // ================= SAVE SERVICE =================
 
   const saveService = async () => {
-
     if (!serviceForm.name || !serviceForm.category || !serviceForm.city_id) {
       return alert("Service Name, Category and City required");
     }
 
-    try {
-      const res = await authFetch("/services/", {
-        method: "POST",
-        body: JSON.stringify({
-          name: serviceForm.name.trim(),
-          category: serviceForm.category.trim().toUpperCase(),
-          city_id: Number(serviceForm.city_id)
-        })
-      });
+    const res = await authFetch("/services/", {
+      method: "POST",
+      body: JSON.stringify({
+        name: serviceForm.name,
+        category: serviceForm.category.toUpperCase(),
+        city_id: Number(serviceForm.city_id)
+      })
+    });
 
-      if (!res.ok) throw new Error("Service creation failed");
-
-      setServiceForm(emptyServiceForm);
-      loadData();
-
-    } catch (error) {
-      console.error("Save Service Error:", error);
-      alert("Error creating service");
+    if (!res.ok) {
+      const err = await res.json();
+      return alert(err.detail || "Error saving service");
     }
+
+    setServiceForm(emptyServiceForm);
+    loadData();
   };
 
   if (loading) return <div className="p-6">Loading...</div>;
@@ -186,6 +147,7 @@ export default function Vendors() {
 
       <h1 className="text-3xl font-bold mb-6">Vendors / Services</h1>
 
+      {/* ================= ADD VENDOR ================= */}
       <div className="bg-white p-6 rounded-xl shadow mb-8">
         <h2 className="text-xl font-semibold mb-4">Add Vendor</h2>
 
@@ -193,20 +155,20 @@ export default function Vendors() {
           <input
             placeholder="Vendor Name"
             value={vendorForm.name}
-            onChange={(e) => handleVendorChange("name", e.target.value)}
+            onChange={(e) => setVendorForm({ ...vendorForm, name: e.target.value })}
             className="border p-2 rounded"
           />
 
           <input
             placeholder="Vendor Type"
             value={vendorForm.vendor_type}
-            onChange={(e) => handleVendorChange("vendor_type", e.target.value)}
+            onChange={(e) => setVendorForm({ ...vendorForm, vendor_type: e.target.value })}
             className="border p-2 rounded"
           />
 
           <select
             value={vendorForm.country_id}
-            onChange={(e) => handleVendorChange("country_id", e.target.value)}
+            onChange={(e) => setVendorForm({ ...vendorForm, country_id: e.target.value, city_id: "" })}
             className="border p-2 rounded"
           >
             <option value="">Select Country</option>
@@ -217,7 +179,7 @@ export default function Vendors() {
 
           <select
             value={vendorForm.city_id}
-            onChange={(e) => handleVendorChange("city_id", e.target.value)}
+            onChange={(e) => setVendorForm({ ...vendorForm, city_id: e.target.value })}
             className="border p-2 rounded"
             disabled={!vendorForm.country_id}
           >
@@ -233,6 +195,57 @@ export default function Vendors() {
           className="mt-4 w-full bg-green-600 text-white py-2 rounded-lg"
         >
           Add Vendor
+        </button>
+      </div>
+
+      {/* ================= ADD SERVICE ================= */}
+      <div className="bg-white p-6 rounded-xl shadow mb-8">
+        <h2 className="text-xl font-semibold mb-4">Add Service</h2>
+
+        <div className="grid grid-cols-2 gap-4">
+          <input
+            placeholder="Service Name"
+            value={serviceForm.name}
+            onChange={(e) => setServiceForm({ ...serviceForm, name: e.target.value })}
+            className="border p-2 rounded"
+          />
+
+          <input
+            placeholder="Category (HOTEL / TOUR / TRANSFER / VISA / TICKET)"
+            value={serviceForm.category}
+            onChange={(e) => setServiceForm({ ...serviceForm, category: e.target.value })}
+            className="border p-2 rounded"
+          />
+
+          <select
+            value={serviceForm.country_id}
+            onChange={(e) => setServiceForm({ ...serviceForm, country_id: e.target.value, city_id: "" })}
+            className="border p-2 rounded"
+          >
+            <option value="">Select Country</option>
+            {countries.map(c => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
+
+          <select
+            value={serviceForm.city_id}
+            onChange={(e) => setServiceForm({ ...serviceForm, city_id: e.target.value })}
+            className="border p-2 rounded"
+            disabled={!serviceForm.country_id}
+          >
+            <option value="">Select City</option>
+            {serviceFilteredCities.map(c => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
+        </div>
+
+        <button
+          onClick={saveService}
+          className="mt-4 w-full bg-blue-600 text-white py-2 rounded-lg"
+        >
+          Add Service
         </button>
       </div>
 
