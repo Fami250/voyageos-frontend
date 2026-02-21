@@ -5,39 +5,38 @@
 const API = "https://voyageos.onrender.com";
 
 // ========================================
-// AUTH FETCH WRAPPER
+// AUTH FETCH WRAPPER (FINAL STABLE)
 // ========================================
 
 export async function authFetch(endpoint, options = {}) {
   const token = localStorage.getItem("token");
 
-  // If token missing → force login
+  // 🔐 If no token → redirect to login
   if (!token) {
     window.location.href = "/login";
     throw new Error("No authentication token found");
   }
 
   const config = {
-    ...options,
+    method: options.method || "GET",
     headers: {
-      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`,
       ...(options.headers || {}),
     },
   };
 
-  // Auto attach JSON header only if body exists
+  // 🧠 Attach body if exists
   if (options.body) {
-    config.headers["Content-Type"] = "application/json";
-
-    // If body is object → stringify
-    if (typeof options.body === "object") {
-      config.body = JSON.stringify(options.body);
-    }
+    config.body =
+      typeof options.body === "string"
+        ? options.body
+        : JSON.stringify(options.body);
   }
 
   const response = await fetch(`${API}${endpoint}`, config);
 
-  // If token expired
+  // 🔁 Auto logout on 401
   if (response.status === 401) {
     localStorage.removeItem("token");
     window.location.href = "/login";

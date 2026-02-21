@@ -11,8 +11,12 @@ export default function Login() {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setError("");
 
     try {
+      // 🧹 Clear any old token
+      localStorage.removeItem("token");
+
       const formData = new URLSearchParams();
       formData.append("username", username);
       formData.append("password", password);
@@ -31,12 +35,19 @@ export default function Login() {
 
       const data = await res.json();
 
+      // 🔐 Ensure token exists
+      if (!data.access_token) {
+        throw new Error("Token not received");
+      }
+
       // 🔐 SAVE TOKEN
       localStorage.setItem("token", data.access_token);
 
+      // 🚀 Redirect after login
       navigate("/");
     } catch (err) {
       setError("Invalid username or password");
+      console.error("Login Error:", err);
     }
   };
 
