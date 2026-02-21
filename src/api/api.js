@@ -1,32 +1,24 @@
-// =======================================
-// VOYAGEOS CENTRAL API CONFIG (AUTH SAFE)
-// =======================================
+const API = "https://voyageos-backend.onrender.com";
 
-const API =
-  import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
-
-// 🔐 Authenticated Fetch Wrapper
-export const authFetch = async (url, options = {}) => {
+export async function authFetch(endpoint, options = {}) {
   const token = localStorage.getItem("token");
 
-  const headers = {
-    "Content-Type": "application/json",
-    ...(options.headers || {}),
-    ...(token && { Authorization: `Bearer ${token}` }),
-  };
-
-  const response = await fetch(`${API}${url}`, {
+  const res = await fetch(`${API}${endpoint}`, {
     ...options,
-    headers,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+      ...options.headers,
+    },
   });
 
-  if (response.status === 401) {
+  if (res.status === 401) {
     localStorage.removeItem("token");
     window.location.href = "/login";
-    return;
+    throw new Error("Unauthorized");
   }
 
-  return response;
-};
+  return res;
+}
 
 export default API;
