@@ -1,8 +1,14 @@
-// ================================
-// VOYAGEOS API CONFIG (Production Safe)
-// ================================
+// =======================================================
+// VOYAGEOS API CONFIG - PRODUCTION SAFE (FINAL LOCKED)
+// =======================================================
+
+// IMPORTANT:
+// Always use environment variable in production.
+// Fallback is set to live backend (NOT localhost).
 
 const API =
-  import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+  import.meta.env.VITE_API_URL ||
+  "https://voyageos.onrender.com";
 
+// Export base API URL
 export default API;

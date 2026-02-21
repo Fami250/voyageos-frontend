@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import API from "../api/api";
 
-// =========================
-// API BASE URL
-// =========================
-const API =
-  import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+// =======================================================
+// CLIENTS PAGE - JWT SECURE VERSION (PRODUCTION SAFE)
+// =======================================================
 
 export default function Clients() {
+  const navigate = useNavigate();
+
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -22,13 +24,42 @@ export default function Clients() {
 
   const [formData, setFormData] = useState(emptyForm);
 
-  // =========================
+  // =======================================================
+  // AUTH HEADER HELPER
+  // =======================================================
+
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      navigate("/");
+      return {};
+    }
+
+    return {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    };
+  };
+
+  // =======================================================
   // FETCH CLIENTS
-  // =========================
+  // =======================================================
+
   const fetchClients = async () => {
     try {
-      const res = await fetch(`${API}/clients/`);
+      const res = await fetch(`${API}/clients/`, {
+        headers: getAuthHeaders(),
+      });
+
+      if (res.status === 401) {
+        localStorage.removeItem("token");
+        navigate("/");
+        return;
+      }
+
       if (!res.ok) throw new Error("Failed to fetch clients");
+
       const data = await res.json();
       setClients(data);
     } catch (error) {
@@ -42,9 +73,10 @@ export default function Clients() {
     fetchClients();
   }, []);
 
-  // =========================
+  // =======================================================
   // HANDLE INPUT CHANGE
-  // =========================
+  // =======================================================
+
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -52,25 +84,29 @@ export default function Clients() {
     });
   };
 
-  // =========================
+  // =======================================================
   // HANDLE SUBMIT (ADD / EDIT)
-  // =========================
+  // =======================================================
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-      if (editId) {
-        await fetch(`${API}/clients/${editId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
+      const res = await fetch(
+        editId
+          ? `${API}/clients/${editId}`
+          : `${API}/clients/`,
+        {
+          method: editId ? "PUT" : "POST",
+          headers: getAuthHeaders(),
           body: JSON.stringify(formData),
-        });
-      } else {
-        await fetch(`${API}/clients/`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formData),
-        });
+        }
+      );
+
+      if (res.status === 401) {
+        localStorage.removeItem("token");
+        navigate("/");
+        return;
       }
 
       resetForm();
@@ -80,43 +116,55 @@ export default function Clients() {
     }
   };
 
-  // =========================
+  // =======================================================
   // DELETE
-  // =========================
+  // =======================================================
+
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this client?")) return;
 
     try {
-      await fetch(`${API}/clients/${id}`, {
+      const res = await fetch(`${API}/clients/${id}`, {
         method: "DELETE",
+        headers: getAuthHeaders(),
       });
+
+      if (res.status === 401) {
+        localStorage.removeItem("token");
+        navigate("/");
+        return;
+      }
+
       fetchClients();
     } catch (error) {
       console.error("Error deleting:", error);
     }
   };
 
-  // =========================
+  // =======================================================
   // EDIT
-  // =========================
+  // =======================================================
+
   const handleEdit = (client) => {
     setFormData(client);
     setEditId(client.id);
     setShowForm(true);
   };
 
-  // =========================
+  // =======================================================
   // RESET FORM
-  // =========================
+  // =======================================================
+
   const resetForm = () => {
     setFormData(emptyForm);
     setEditId(null);
     setShowForm(false);
   };
 
-  // =========================
+  // =======================================================
   // UI
-  // =========================
+  // =======================================================
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
