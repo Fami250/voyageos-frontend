@@ -1,6 +1,8 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import Layout from "./Layout";
+import ProtectedRoute from "./ProtectedRoute";
 
+import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Clients from "./pages/Clients";
 import Countries from "./pages/Countries";
@@ -15,18 +17,34 @@ import Finance from "./pages/Finance";
 function App() {
   return (
     <Routes>
-      <Route element={<Layout />}>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/clients" element={<Clients />} />
-        <Route path="/countries" element={<Countries />} />
-        <Route path="/cities" element={<Cities />} />
-        <Route path="/vendors" element={<Vendors />} />
-        <Route path="/create-quotation" element={<Quotations />} />
-        <Route path="/quotation-summary" element={<QuotationSummary />} />
-        <Route path="/quotation/:id" element={<QuotationView />} />
-        <Route path="/invoices" element={<Invoices />} />
-        <Route path="/finance" element={<Finance />} />
+
+      {/* PUBLIC LOGIN */}
+      <Route path="/login" element={<Login />} />
+
+      {/* PROTECTED AREA */}
+      <Route
+        path="/*"
+        element={
+          <ProtectedRoute>
+            <Layout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<Dashboard />} />
+        <Route path="clients" element={<Clients />} />
+        <Route path="countries" element={<Countries />} />
+        <Route path="cities" element={<Cities />} />
+        <Route path="vendors" element={<Vendors />} />
+        <Route path="create-quotation" element={<Quotations />} />
+        <Route path="quotation-summary" element={<QuotationSummary />} />
+        <Route path="quotation/:id" element={<QuotationView />} />
+        <Route path="invoices" element={<Invoices />} />
+        <Route path="finance" element={<Finance />} />
       </Route>
+
+      {/* FALLBACK */}
+      <Route path="*" element={<Navigate to="/login" />} />
+
     </Routes>
   );
 }
