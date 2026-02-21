@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import API from "../api/api";
+import { authFetch } from "../api/api";
 
 export default function Services() {
 
@@ -23,8 +23,7 @@ export default function Services() {
   // ================= FETCH CITIES =================
   const fetchCities = async () => {
     try {
-      const res = await fetch(`${API}/cities/`);
-      if (!res.ok) throw new Error("Failed to fetch cities");
+      const res = await authFetch("/cities/");
       const data = await res.json();
       setCities(Array.isArray(data) ? data : []);
     } catch (err) {
@@ -47,12 +46,7 @@ export default function Services() {
     setLoadingRates(true);
 
     try {
-      const res = await fetch(
-        `${API}/services/?city=${selectedCity}`
-      );
-
-      if (!res.ok) throw new Error("Failed to load services");
-
+      const res = await authFetch(`/services/?city=${selectedCity}`);
       const data = await res.json();
       setCityServices(Array.isArray(data) ? data : []);
     } catch (err) {
@@ -75,14 +69,13 @@ export default function Services() {
     e.preventDefault();
 
     try {
-      const res = await fetch(`${API}/services/`, {
+      const res = await authFetch("/services/", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+        body: {
           name: formData.name,
           category: formData.category,
           city_id: Number(formData.city_id)
-        })
+        }
       });
 
       const data = await res.json();
@@ -105,11 +98,15 @@ export default function Services() {
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this service?")) return;
 
-    await fetch(`${API}/services/${id}`, {
-      method: "DELETE"
-    });
+    try {
+      await authFetch(`/services/${id}`, {
+        method: "DELETE"
+      });
 
-    fetchCityServices();
+      fetchCityServices();
+    } catch (err) {
+      console.error("Delete error:", err);
+    }
   };
 
   // ================= EXCEL UPLOAD =================
@@ -124,13 +121,11 @@ export default function Services() {
     setExcelLoading(true);
 
     try {
-      const res = await fetch(
-        `${API}/services/upload-excel/`,
-        {
-          method: "POST",
-          body: uploadData
-        }
-      );
+      // IMPORTANT: Don't manually set Content-Type for FormData
+      const res = await authFetch("/services/upload-excel/", {
+        method: "POST",
+        body: uploadData
+      });
 
       const data = await res.json();
 

@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import API from "../api/api";
+import { authFetch } from "../api/api";
+
+// =======================================================
+// COUNTRIES PAGE - FINAL JWT STABLE VERSION
+// =======================================================
 
 export default function Countries() {
   const navigate = useNavigate();
@@ -14,46 +18,29 @@ export default function Countries() {
     loadCountries();
   }, []);
 
-  const authHeader = () => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      navigate("/login");
-      return null;
-    }
-    return {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    };
-  };
+  // =======================================================
+  // LOAD COUNTRIES (AUTH SAFE)
+  // =======================================================
 
   const loadCountries = async () => {
     try {
       setLoading(true);
 
-      const headers = authHeader();
-      if (!headers) return;
-
-      const res = await fetch(`${API}/countries/`, {
-        headers,
-      });
-
-      if (res.status === 401) {
-        localStorage.removeItem("token");
-        navigate("/login");
-        return;
-      }
-
-      if (!res.ok) throw new Error("Failed to load countries");
-
+      const res = await authFetch("/countries/");
       const data = await res.json();
+
       setCountries(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Load Countries Error:", error);
-      alert("Error loading countries");
+      navigate("/login");
     } finally {
       setLoading(false);
     }
   };
+
+  // =======================================================
+  // CREATE COUNTRY (AUTH SAFE)
+  // =======================================================
 
   const createCountry = async () => {
     if (!name.trim()) {
@@ -64,22 +51,10 @@ export default function Countries() {
     try {
       setCreating(true);
 
-      const headers = authHeader();
-      if (!headers) return;
-
-      const res = await fetch(`${API}/countries/`, {
+      await authFetch("/countries/", {
         method: "POST",
-        headers,
-        body: JSON.stringify({ name: name.trim() }),
+        body: { name: name.trim() },
       });
-
-      if (res.status === 401) {
-        localStorage.removeItem("token");
-        navigate("/login");
-        return;
-      }
-
-      if (!res.ok) throw new Error("Create failed");
 
       setName("");
       await loadCountries();
@@ -90,6 +65,10 @@ export default function Countries() {
       setCreating(false);
     }
   };
+
+  // =======================================================
+  // UI
+  // =======================================================
 
   if (loading) return <div className="p-6">Loading Countries...</div>;
 

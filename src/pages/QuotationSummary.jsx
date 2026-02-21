@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import API from "../api/api";
+import { authFetch } from "../api/api";
 
 function QuotationSummary() {
 
@@ -24,8 +24,8 @@ function QuotationSummary() {
     setResults([]);
 
     try {
-      const response = await fetch(
-        `${API}/quotations/filter/by-date?start_date=${startDate}&end_date=${endDate}`
+      const response = await authFetch(
+        `/quotations/filter/by-date?start_date=${startDate}&end_date=${endDate}`
       );
 
       if (!response.ok) throw new Error("Failed to fetch quotations");
@@ -51,8 +51,8 @@ function QuotationSummary() {
     if (!confirmDelete) return;
 
     try {
-      const response = await fetch(
-        `${API}/quotations/${id}`,
+      const response = await authFetch(
+        `/quotations/${id}`,
         { method: "DELETE" }
       );
 
@@ -172,7 +172,7 @@ function QuotationSummary() {
                 <td>{q.id}</td>
                 <td>{q.quotation_number}</td>
                 <td>{q.client_id}</td>
-                <td>{q.total_sell}</td>
+                <td>{Number(q.total_sell).toLocaleString()}</td>
                 <td>{q.status}</td>
                 <td>
                   <button onClick={() => navigate(`/quotation/${q.id}`)}>

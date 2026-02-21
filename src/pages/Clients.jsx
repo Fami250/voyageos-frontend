@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import API from "../api/api";
+import { authFetch } from "../api/api";
 
 // =======================================================
-// CLIENTS PAGE - JWT SECURE VERSION (PRODUCTION SAFE)
+// CLIENTS PAGE - FINAL JWT STABLE VERSION
 // =======================================================
 
 export default function Clients() {
@@ -25,45 +25,17 @@ export default function Clients() {
   const [formData, setFormData] = useState(emptyForm);
 
   // =======================================================
-  // AUTH HEADER HELPER
-  // =======================================================
-
-  const getAuthHeaders = () => {
-    const token = localStorage.getItem("token");
-
-    if (!token) {
-      navigate("/");
-      return {};
-    }
-
-    return {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    };
-  };
-
-  // =======================================================
-  // FETCH CLIENTS
+  // FETCH CLIENTS (AUTH SAFE)
   // =======================================================
 
   const fetchClients = async () => {
     try {
-      const res = await fetch(`${API}/clients/`, {
-        headers: getAuthHeaders(),
-      });
-
-      if (res.status === 401) {
-        localStorage.removeItem("token");
-        navigate("/");
-        return;
-      }
-
-      if (!res.ok) throw new Error("Failed to fetch clients");
-
+      const res = await authFetch("/clients/");
       const data = await res.json();
       setClients(data);
     } catch (error) {
       console.error("Error fetching clients:", error);
+      navigate("/login");
     } finally {
       setLoading(false);
     }
@@ -92,22 +64,13 @@ export default function Clients() {
     e.preventDefault();
 
     try {
-      const res = await fetch(
-        editId
-          ? `${API}/clients/${editId}`
-          : `${API}/clients/`,
+      await authFetch(
+        editId ? `/clients/${editId}` : "/clients/",
         {
           method: editId ? "PUT" : "POST",
-          headers: getAuthHeaders(),
-          body: JSON.stringify(formData),
+          body: formData,
         }
       );
-
-      if (res.status === 401) {
-        localStorage.removeItem("token");
-        navigate("/");
-        return;
-      }
 
       resetForm();
       fetchClients();
@@ -124,16 +87,9 @@ export default function Clients() {
     if (!window.confirm("Delete this client?")) return;
 
     try {
-      const res = await fetch(`${API}/clients/${id}`, {
+      await authFetch(`/clients/${id}`, {
         method: "DELETE",
-        headers: getAuthHeaders(),
       });
-
-      if (res.status === 401) {
-        localStorage.removeItem("token");
-        navigate("/");
-        return;
-      }
 
       fetchClients();
     } catch (error) {

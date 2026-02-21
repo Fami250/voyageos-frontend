@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { authFetch } from "../api/api";
 import API from "../api/api";
 
 export default function QuotationView() {
@@ -24,7 +25,7 @@ export default function QuotationView() {
       setLoading(true);
       setError("");
 
-      const res = await fetch(`${API}/quotations/${id}`);
+      const res = await authFetch(`/quotations/${id}`);
 
       if (res.status === 404) {
         setQuotation(null);
@@ -39,8 +40,9 @@ export default function QuotationView() {
       const data = await res.json();
       setQuotation(data);
 
-      // Load invoice
-      const invRes = await fetch(`${API}/invoices?quotation_id=${id}`);
+      // Load related invoice
+      const invRes = await authFetch(`/invoices?quotation_id=${id}`);
+
       if (invRes.ok) {
         const invData = await invRes.json();
         if (Array.isArray(invData) && invData.length > 0) {
@@ -66,10 +68,9 @@ export default function QuotationView() {
     try {
       setUpdating(true);
 
-      const res = await fetch(`${API}/quotations/${id}/status`, {
+      const res = await authFetch(`/quotations/${id}/status`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: newStatus })
+        body: { status: newStatus }
       });
 
       if (!res.ok) {

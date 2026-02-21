@@ -1,6 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import API from "../api/api";
+import { authFetch } from "../api/api";
+
+// =======================================================
+// CITIES PAGE - FINAL JWT STABLE VERSION
+// =======================================================
 
 export default function Cities() {
   const navigate = useNavigate();
@@ -15,36 +19,18 @@ export default function Cities() {
     loadData();
   }, []);
 
-  const authHeader = () => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      navigate("/login");
-      return null;
-    }
-    return {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    };
-  };
+  // =======================================================
+  // LOAD CITIES + COUNTRIES (AUTH SAFE)
+  // =======================================================
 
   const loadData = async () => {
     try {
       setLoading(true);
 
-      const headers = authHeader();
-      if (!headers) return;
-
-      const cityRes = await fetch(`${API}/cities/`, { headers });
-      const countryRes = await fetch(`${API}/countries/`, { headers });
-
-      if (cityRes.status === 401 || countryRes.status === 401) {
-        localStorage.removeItem("token");
-        navigate("/login");
-        return;
-      }
-
-      if (!cityRes.ok || !countryRes.ok)
-        throw new Error("Failed to load data");
+      const [cityRes, countryRes] = await Promise.all([
+        authFetch("/cities/"),
+        authFetch("/countries/"),
+      ]);
 
       const cityData = await cityRes.json();
       const countryData = await countryRes.json();
@@ -53,11 +39,15 @@ export default function Cities() {
       setCountries(Array.isArray(countryData) ? countryData : []);
     } catch (err) {
       console.error("Load Cities Error:", err);
-      alert("Error loading cities");
+      navigate("/login");
     } finally {
       setLoading(false);
     }
   };
+
+  // =======================================================
+  // CREATE CITY (AUTH SAFE)
+  // =======================================================
 
   const createCity = async () => {
     if (!name.trim() || !countryId) {
@@ -66,25 +56,13 @@ export default function Cities() {
     }
 
     try {
-      const headers = authHeader();
-      if (!headers) return;
-
-      const res = await fetch(`${API}/cities/`, {
+      await authFetch("/cities/", {
         method: "POST",
-        headers,
-        body: JSON.stringify({
+        body: {
           name: name.trim(),
           country_id: Number(countryId),
-        }),
+        },
       });
-
-      if (res.status === 401) {
-        localStorage.removeItem("token");
-        navigate("/login");
-        return;
-      }
-
-      if (!res.ok) throw new Error("Create failed");
 
       setName("");
       setCountryId("");
@@ -94,6 +72,10 @@ export default function Cities() {
       alert("Error creating city");
     }
   };
+
+  // =======================================================
+  // UI
+  // =======================================================
 
   if (loading) return <div className="p-6">Loading Cities...</div>;
 

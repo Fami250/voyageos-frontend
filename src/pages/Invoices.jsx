@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { authFetch } from "../api/api";
 import API from "../api/api";
 
 export default function Invoices() {
@@ -18,10 +19,9 @@ export default function Invoices() {
   // ================= LOAD INVOICES =================
   const loadInvoices = async () => {
     try {
-      const res = await fetch(`${API}/invoices/`);
-      if (!res.ok) throw new Error("Failed to load invoices");
+      const res = await authFetch("/invoices/");
       const data = await res.json();
-      setInvoices(data);
+      setInvoices(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error(err);
     }
@@ -30,10 +30,9 @@ export default function Invoices() {
   // ================= LOAD PAYMENTS =================
   const loadPayments = async (invoiceId) => {
     try {
-      const res = await fetch(`${API}/invoices/${invoiceId}/payments`);
-      if (!res.ok) return;
+      const res = await authFetch(`/invoices/${invoiceId}/payments`);
       const data = await res.json();
-      setPayments(data);
+      setPayments(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error(err);
     }
@@ -56,15 +55,14 @@ export default function Invoices() {
     }
 
     try {
-      const res = await fetch(`${API}/invoices/${selectedInvoice.id}/payment`, {
+      const res = await authFetch(`/invoices/${selectedInvoice.id}/payment`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+        body: {
           paid_amount: Number(amount),
           payment_method: method,
           reference_number: reference,
           notes: ""
-        })
+        }
       });
 
       if (!res.ok) {
@@ -93,7 +91,7 @@ export default function Invoices() {
     if (!window.confirm("Cancel this invoice?")) return;
 
     try {
-      const res = await fetch(`${API}/invoices/${invoiceId}/cancel`, {
+      const res = await authFetch(`/invoices/${invoiceId}/cancel`, {
         method: "PUT"
       });
 
