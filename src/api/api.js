@@ -1,4 +1,4 @@
-const API = "https://voyageos-backend.onrender.com";
+const API = "https://voyageos.onrender.com";
 
 export async function authFetch(endpoint, options = {}) {
   const token = localStorage.getItem("token");
