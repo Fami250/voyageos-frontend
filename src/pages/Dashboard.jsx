@@ -20,24 +20,49 @@ export default function Dashboard() {
   const [monthlyData, setMonthlyData] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // =========================
+  // FETCH DASHBOARD DATA
+  // =========================
   useEffect(() => {
-    fetch(`${API}/dashboard/`)
-      .then((res) => {
+    const fetchDashboard = async () => {
+      try {
+        const token = localStorage.getItem("token");
+
+        if (!token) {
+          navigate("/login");
+          return;
+        }
+
+        const res = await fetch(`${API}/dashboard/`, {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        // 🔐 Auto logout if token expired
+        if (res.status === 401) {
+          localStorage.removeItem("token");
+          navigate("/login");
+          return;
+        }
+
         if (!res.ok) {
           throw new Error("API error");
         }
-        return res.json();
-      })
-      .then((result) => {
-        setData(result);
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error("Error fetching dashboard:", err);
-        setLoading(false);
-      });
 
-    // Static demo monthly chart (can later connect to backend)
+        const result = await res.json();
+        setData(result);
+      } catch (err) {
+        console.error("Error fetching dashboard:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboard();
+
+    // Demo Monthly Data (static for now)
     setMonthlyData([
       { month: "Jan", revenue: 1200000, profit: 250000 },
       { month: "Feb", revenue: 1500000, profit: 320000 },
@@ -46,7 +71,7 @@ export default function Dashboard() {
       { month: "May", revenue: 1300000, profit: 270000 },
       { month: "Jun", revenue: 2000000, profit: 520000 },
     ]);
-  }, []);
+  }, [navigate]);
 
   const safe = (val) => {
     if (!val || isNaN(val)) return 0;

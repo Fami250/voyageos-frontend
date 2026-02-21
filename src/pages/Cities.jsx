@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import API from "../api/api";
 
 export default function Cities() {
+  const navigate = useNavigate();
 
   const [cities, setCities] = useState([]);
   const [countries, setCountries] = useState([]);
@@ -13,23 +15,42 @@ export default function Cities() {
     loadData();
   }, []);
 
+  const authHeader = () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/login");
+      return null;
+    }
+    return {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    };
+  };
+
   const loadData = async () => {
     try {
       setLoading(true);
 
-      const cityRes = await fetch(`${API}/cities/`);
-      const countryRes = await fetch(`${API}/countries/`);
+      const headers = authHeader();
+      if (!headers) return;
 
-      if (!cityRes.ok || !countryRes.ok) {
-        throw new Error("Failed to load data");
+      const cityRes = await fetch(`${API}/cities/`, { headers });
+      const countryRes = await fetch(`${API}/countries/`, { headers });
+
+      if (cityRes.status === 401 || countryRes.status === 401) {
+        localStorage.removeItem("token");
+        navigate("/login");
+        return;
       }
+
+      if (!cityRes.ok || !countryRes.ok)
+        throw new Error("Failed to load data");
 
       const cityData = await cityRes.json();
       const countryData = await countryRes.json();
 
       setCities(Array.isArray(cityData) ? cityData : []);
       setCountries(Array.isArray(countryData) ? countryData : []);
-
     } catch (err) {
       console.error("Load Cities Error:", err);
       alert("Error loading cities");
@@ -45,21 +66,29 @@ export default function Cities() {
     }
 
     try {
+      const headers = authHeader();
+      if (!headers) return;
+
       const res = await fetch(`${API}/cities/`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({
           name: name.trim(),
-          country_id: Number(countryId)
-        })
+          country_id: Number(countryId),
+        }),
       });
+
+      if (res.status === 401) {
+        localStorage.removeItem("token");
+        navigate("/login");
+        return;
+      }
 
       if (!res.ok) throw new Error("Create failed");
 
       setName("");
       setCountryId("");
       await loadData();
-
     } catch (err) {
       console.error("Create City Error:", err);
       alert("Error creating city");
@@ -70,11 +99,9 @@ export default function Cities() {
 
   return (
     <div>
-
       <h1 className="text-3xl font-bold mb-6">Cities</h1>
 
       <div className="bg-white p-6 rounded-xl shadow mb-8 flex gap-4">
-
         <input
           placeholder="City Name"
           value={name}
@@ -88,7 +115,7 @@ export default function Cities() {
           className="border p-2 rounded"
         >
           <option value="">Select Country</option>
-          {countries.map(c => (
+          {countries.map((c) => (
             <option key={c.id} value={c.id}>
               {c.name}
             </option>
@@ -101,7 +128,6 @@ export default function Cities() {
         >
           Add City
         </button>
-
       </div>
 
       <div className="bg-white p-6 rounded-xl shadow">
@@ -121,7 +147,7 @@ export default function Cities() {
                 </td>
               </tr>
             ) : (
-              cities.map(city => (
+              cities.map((city) => (
                 <tr key={city.id} className="border-b">
                   <td className="py-2">{city.id}</td>
                   <td>{city.name}</td>
@@ -132,7 +158,6 @@ export default function Cities() {
           </tbody>
         </table>
       </div>
-
     </div>
   );
 }

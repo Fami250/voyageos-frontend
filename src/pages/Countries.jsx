@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import API from "../api/api";
 
 export default function Countries() {
+  const navigate = useNavigate();
 
   const [countries, setCountries] = useState([]);
   const [name, setName] = useState("");
@@ -12,19 +14,39 @@ export default function Countries() {
     loadCountries();
   }, []);
 
+  const authHeader = () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/login");
+      return null;
+    }
+    return {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    };
+  };
+
   const loadCountries = async () => {
     try {
       setLoading(true);
 
-      const res = await fetch(`${API}/countries/`);
+      const headers = authHeader();
+      if (!headers) return;
 
-      if (!res.ok) {
-        throw new Error("Failed to load countries");
+      const res = await fetch(`${API}/countries/`, {
+        headers,
+      });
+
+      if (res.status === 401) {
+        localStorage.removeItem("token");
+        navigate("/login");
+        return;
       }
+
+      if (!res.ok) throw new Error("Failed to load countries");
 
       const data = await res.json();
       setCountries(Array.isArray(data) ? data : []);
-
     } catch (error) {
       console.error("Load Countries Error:", error);
       alert("Error loading countries");
@@ -42,19 +64,25 @@ export default function Countries() {
     try {
       setCreating(true);
 
+      const headers = authHeader();
+      if (!headers) return;
+
       const res = await fetch(`${API}/countries/`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: name.trim() })
+        headers,
+        body: JSON.stringify({ name: name.trim() }),
       });
 
-      if (!res.ok) {
-        throw new Error("Create failed");
+      if (res.status === 401) {
+        localStorage.removeItem("token");
+        navigate("/login");
+        return;
       }
+
+      if (!res.ok) throw new Error("Create failed");
 
       setName("");
       await loadCountries();
-
     } catch (error) {
       console.error("Create Country Error:", error);
       alert("Error creating country");
@@ -63,13 +91,10 @@ export default function Countries() {
     }
   };
 
-  if (loading) {
-    return <div className="p-6">Loading Countries...</div>;
-  }
+  if (loading) return <div className="p-6">Loading Countries...</div>;
 
   return (
     <div>
-
       <h1 className="text-3xl font-bold mb-6">Countries</h1>
 
       <div className="bg-white p-6 rounded-xl shadow mb-8 flex gap-4">
@@ -116,7 +141,6 @@ export default function Countries() {
           </tbody>
         </table>
       </div>
-
     </div>
   );
 }
