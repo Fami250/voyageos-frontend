@@ -18,12 +18,12 @@ function App() {
   return (
     <Routes>
 
-      {/* PUBLIC LOGIN */}
+      {/* ================= PUBLIC ROUTE ================= */}
       <Route path="/login" element={<Login />} />
 
-      {/* PROTECTED AREA */}
+      {/* ================= PROTECTED ROUTES ================= */}
       <Route
-        path="/*"
+        path="/"
         element={
           <ProtectedRoute>
             <Layout />
@@ -42,8 +42,8 @@ function App() {
         <Route path="finance" element={<Finance />} />
       </Route>
 
-      {/* FALLBACK */}
-      <Route path="*" element={<Navigate to="/login" />} />
+      {/* ================= FALLBACK ================= */}
+      <Route path="*" element={<Navigate to="/login" replace />} />
 
     </Routes>
   );
