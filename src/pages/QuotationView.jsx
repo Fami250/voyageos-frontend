@@ -13,7 +13,6 @@ export default function QuotationView() {
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState("");
 
-  // ================= LOAD =================
   useEffect(() => {
     if (id) {
       fetchQuotation();
@@ -26,48 +25,30 @@ export default function QuotationView() {
       setError("");
 
       const res = await authFetch(`/quotations/${id}`);
-
-      if (res.status === 404) {
-        setQuotation(null);
-        setError("Quotation not found");
-        return;
-      }
-
-      if (!res.ok) {
-        throw new Error("Server error");
-      }
+      if (!res.ok) throw new Error("Load failed");
 
       const data = await res.json();
       setQuotation(data);
 
-      // Load related invoice
       const invRes = await authFetch(`/invoices?quotation_id=${id}`);
-
       if (invRes.ok) {
         const invData = await invRes.json();
-        if (Array.isArray(invData) && invData.length > 0) {
-          setInvoice(invData[0]);
-        } else {
-          setInvoice(null);
-        }
+        setInvoice(invData?.length ? invData[0] : null);
       } else {
         setInvoice(null);
       }
 
     } catch (err) {
-      console.error("Load error:", err);
-      setError("Server connection error");
-      setQuotation(null);
+      console.error(err);
+      setError("Server error");
     } finally {
       setLoading(false);
     }
   };
 
-  // ================= STATUS UPDATE =================
   const updateStatus = async (newStatus) => {
     try {
       setUpdating(true);
-
       const res = await authFetch(`/quotations/${id}/status`, {
         method: "PUT",
         body: { status: newStatus }
@@ -75,31 +56,24 @@ export default function QuotationView() {
 
       if (!res.ok) {
         const err = await res.json();
-        alert(err.detail || "Status update failed");
+        alert(err.detail || "Update failed");
         return;
       }
 
       await fetchQuotation();
-
-    } catch (err) {
-      console.error("Status update error:", err);
+    } catch {
       alert("Server error");
     } finally {
       setUpdating(false);
     }
   };
 
-  const formatDate = (dateStr) => {
-    if (!dateStr) return "";
-    const d = new Date(dateStr);
-    return d.toLocaleDateString("en-GB");
-  };
+  const formatDate = (d) =>
+    d ? new Date(d).toLocaleDateString("en-GB") : "";
 
   if (loading) return <div className="p-6">Loading...</div>;
   if (error) return <div className="p-6 text-red-600">{error}</div>;
   if (!quotation) return null;
-
-  const status = quotation.status;
 
   return (
     <div className="p-8 bg-gray-50 min-h-screen">
@@ -110,26 +84,26 @@ export default function QuotationView() {
           <h1 className="text-3xl font-bold">
             Quotation #{quotation.quotation_number}
           </h1>
-          <p className="mt-1 text-sm text-gray-600">
-            Status: <span className="font-semibold">{status}</span>
+          <p className="text-sm text-gray-600">
+            Client: <strong>{quotation.client?.company_name}</strong>
+          </p>
+          <p className="text-sm">
+            Status: <strong>{quotation.status}</strong>
           </p>
         </div>
 
         <div className="flex gap-3">
 
-          {status === "DRAFT" && (
+          {quotation.status === "DRAFT" && (
             <>
               <button
                 onClick={() => updateStatus("CONFIRMED")}
-                disabled={updating}
                 className="bg-green-600 text-white px-4 py-2 rounded"
               >
                 Confirm
               </button>
-
               <button
                 onClick={() => updateStatus("CANCELLED")}
-                disabled={updating}
                 className="bg-red-600 text-white px-4 py-2 rounded"
               >
                 Cancel
@@ -137,19 +111,16 @@ export default function QuotationView() {
             </>
           )}
 
-          {status === "CONFIRMED" && (
+          {quotation.status === "CONFIRMED" && (
             <>
               <button
                 onClick={() => updateStatus("BOOKED")}
-                disabled={updating}
                 className="bg-blue-600 text-white px-4 py-2 rounded"
               >
                 Mark as Booked
               </button>
-
               <button
                 onClick={() => updateStatus("CANCELLED")}
-                disabled={updating}
                 className="bg-red-600 text-white px-4 py-2 rounded"
               >
                 Cancel
@@ -186,19 +157,16 @@ export default function QuotationView() {
               <th className="p-2 border">Total</th>
             </tr>
           </thead>
-
           <tbody>
             {quotation.items.map((item) => (
               <tr key={item.id}>
                 <td className="p-2 border">
-                  {item.service_name}
+                  {item.service?.name}
                 </td>
                 <td className="p-2 border">
                   {formatDate(item.start_date)} → {formatDate(item.end_date)}
                 </td>
-                <td className="p-2 border">
-                  {item.quantity}
-                </td>
+                <td className="p-2 border">{item.quantity}</td>
                 <td className="p-2 border">
                   PKR {Number(item.sell_price).toLocaleString()}
                 </td>
@@ -219,6 +187,26 @@ export default function QuotationView() {
         </div>
 
       </div>
+
+      {/* INVOICE / PAYMENT */}
+      {invoice && (
+        <div className="bg-white p-6 rounded-xl shadow">
+          <h2 className="text-xl font-semibold mb-4">
+            Invoice Details
+          </h2>
+
+          <p><strong>Invoice No:</strong> {invoice.invoice_number}</p>
+          <p><strong>Total:</strong> PKR {Number(invoice.total_amount).toLocaleString()}</p>
+          <p><strong>Paid:</strong> PKR {Number(invoice.paid_amount).toLocaleString()}</p>
+          <p><strong>Due:</strong> PKR {Number(invoice.due_amount).toLocaleString()}</p>
+          <p>
+            <strong>Status:</strong>{" "}
+            <span className="font-semibold">
+              {invoice.payment_status}
+            </span>
+          </p>
+        </div>
+      )}
 
     </div>
   );
