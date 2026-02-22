@@ -73,7 +73,8 @@ function QuotationSummary() {
         style={{
           fontSize: "34px",
           fontWeight: "800",
-          marginBottom: "30px"
+          marginBottom: "30px",
+          textAlign: "center"
         }}
       >
         Quotation Summary
@@ -148,19 +149,20 @@ function QuotationSummary() {
       {Array.isArray(results) && results.length > 0 && (
         <table
           border="1"
-          cellPadding="10"
+          cellPadding="12"
           style={{
             width: "100%",
             borderCollapse: "collapse",
-            marginTop: "20px"
+            marginTop: "20px",
+            backgroundColor: "#fff"
           }}
         >
-          <thead>
-            <tr>
+          <thead style={{ backgroundColor: "#f5f5f5" }}>
+            <tr style={{ textAlign: "center", fontWeight: "700" }}>
               <th>ID</th>
               <th>Quotation No</th>
-              <th>Client ID</th>
-              <th>Total Sell</th>
+              <th>Client</th>
+              <th style={{ textAlign: "right" }}>Total Sell</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
@@ -168,12 +170,21 @@ function QuotationSummary() {
 
           <tbody>
             {results.map((q) => (
-              <tr key={q.id}>
+              <tr key={q.id} style={{ textAlign: "center" }}>
                 <td>{q.id}</td>
-                <td>{q.quotation_number}</td>
-                <td>{q.client_id}</td>
-                <td>{Number(q.total_sell).toLocaleString()}</td>
+                <td style={{ fontWeight: "600" }}>{q.quotation_number}</td>
+
+                {/* 🔥 CLIENT NAME FIX */}
+                <td>
+                  {q.client?.company_name || "—"}
+                </td>
+
+                <td style={{ textAlign: "right", fontWeight: "600" }}>
+                  PKR {Number(q.total_sell).toLocaleString()}
+                </td>
+
                 <td>{q.status}</td>
+
                 <td>
                   <button onClick={() => navigate(`/quotation/${q.id}`)}>
                     View
@@ -194,12 +205,14 @@ function QuotationSummary() {
                       backgroundColor: "red",
                       border: "none",
                       padding: "5px 8px",
-                      cursor: "pointer"
+                      cursor: "pointer",
+                      borderRadius: "4px"
                     }}
                   >
                     Delete
                   </button>
                 </td>
+
               </tr>
             ))}
           </tbody>
